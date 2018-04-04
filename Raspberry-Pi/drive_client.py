@@ -1,47 +1,44 @@
-import threading
 import io
 import socket
-import struct
-import time
-from time import sleep
-from threading import Thread
-
-# Set server IP address & Port
-HOST = "10.217.202.76"
-PORT = 8001
-BUFFER_SIZE = 1024
+import RPI
+import constants
         
 # give command to car
-def drive():
+def driveCommand():
+    rcControl = RPI.RPI_()
+    print('drive command start...')
+    # Set server IP address & Port
     drive_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # drive_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    drive_socket.connect((HOST, PORT))  #Bind to the port
+    drive_socket.connect((constants.HOST, constants.DRIVE_PORT))  #Bind to the port
 
-    print('server ready to receive command')
+    print('drive connection successfull...')
     try:
         while True:
             # Read command received from server
-            cmd = drive_socket.recv(BUFFER_SIZE)
-            print(cmd)
-            # if (cmd == 1): # drive forward
-                # print("Forward")
-            # elif (cmd == 2): # drive left
-                # print("Left");
-            # elif (cmd == 3): # drive right
-                # print("Right");
-            # elif (cmd == 12): # drive forward and right
-                # print("Forward Right");
-            # elif (cmd == 13): # drive forward and left
-                # print("Right");
-            # elif (cmd == -1):
-                # print("Reverse")
-            # elif (cmd == 0): # stop
-                # print("Stop");          
-    except:
-        print("ERROR (drive_server.drive) -> Error occured")
+            cmd = drive_socket.recv(constants.BUFFER_SIZE)
+            command = cmd.decode().lower().strip()   
+            print("received: ", command)
+            
+            if (command == "x" or len(command) == 0): # drive forward
+                print('Exiting drive')
+                rcControl.reset()
+                break
+            elif(command == 'a'): 
+                rcControl.left()
+            elif(command == 'd'):
+                rcControl.right()
+            elif(command == 'w'):	
+                rcControl.forward()                
+            elif(command == 's'):
+                rcControl.backward()
+            elif(command == 'a,w' or command == 'w,a'):
+                rcControl.forwardLeft()
+            elif(command == 'w,d' or command == 'd,w'):
+                rcControl.forwardRight()
+            else:
+                rcControl.reset()       
+    except Exception as e:
+        print("ERROR (drive_server.driveCommand) -> Error occured: ", e)
     finally:
+        print('drive command end...')
         drive_socket.close()
-        
-
-Thread(target = drive).start()
-
