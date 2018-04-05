@@ -4,16 +4,6 @@ import time
 
 class RPI_:
 
-	#motor_pin_1
-	#motor_pin_2
-	#motor_pin_3=None
-	#motor_pin_4=None
-	#steer_pin_3=None
-	#steer_pin_4=None
-	#timestep=None
-	#timeinMs=0
-	#withTimeSleep = True
-	
 	def init_motorpin(self):
 		IO.setwarnings(False)
 		IO.setmode(IO.BOARD)
@@ -46,8 +36,8 @@ class RPI_:
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)		
 				self.reset()
-		except:
-			print ("Exception in forward function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.forward -> ",e)
 			self.reset()
 			
 	def backward(self):
@@ -60,10 +50,34 @@ class RPI_:
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)
 				self.reset()
-		except:
-			print ("Exception in backward function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.backward -> " ,e)
 			self.reset()
 
+	def left(self): 
+	
+		try:
+			IO.output(self.steer_pin_4,IO.LOW)
+			IO.output(self.steer_pin_3,IO.HIGH)	
+			if self.withTimeSleep == True:
+				time.sleep(self.timeinMs)
+				self.reset()
+		except Exception as e :
+			print ("ErrorOccured -> RPI_.left -> ",e)
+			self.reset()
+
+	def right(self):
+	
+		try:
+			IO.output(self.steer_pin_4,IO.HIGH)
+			IO.output(self.steer_pin_3,IO.LOW)
+			if self.withTimeSleep == True:
+				time.sleep(self.timeinMs)
+				self.reset()
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.right -> ",e)
+			self.reset()
+			
 	def forwardLeft(self):
 	
 		try:
@@ -76,8 +90,8 @@ class RPI_:
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)
 				self.reset()
-		except:
-			print ("Exception in forwardLeft function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.forwardLeft -> ",e)
 			self.reset()
 
 	def forwardRight(self):
@@ -93,35 +107,43 @@ class RPI_:
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)
 				self.reset()
-		except:
-			print ("Exception in forwardRight function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.forwardRight ->" ,e )
 			self.reset()
 
-       
-	def left(self): 
-	
+       def backwardLeft(self):
+		
 		try:
+			IO.output(self.motor_pin_4,IO.LOW)
+			IO.output(self.motor_pin_2,IO.LOW)
+			IO.output(self.motor_pin_1,IO.HIGH)
+			IO.output(self.motor_pin_3,IO.HIGH)
+			
 			IO.output(self.steer_pin_4,IO.LOW)
-			IO.output(self.steer_pin_3,IO.HIGH)	
+			IO.output(self.steer_pin_3,IO.HIGH)
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)
 				self.reset()
-		except:
-			print ("Exception in left function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.backwardLeft -> " ,e )
 			self.reset()
 
-	def right(self):
-	
+	def backwardRight(self):
+		
 		try:
+			IO.output(self.motor_pin_4,IO.LOW)
+			IO.output(self.motor_pin_2,IO.LOW)
+			IO.output(self.motor_pin_1,IO.HIGH)
+			IO.output(self.motor_pin_3,IO.HIGH)
+			
 			IO.output(self.steer_pin_4,IO.HIGH)
 			IO.output(self.steer_pin_3,IO.LOW)
 			if self.withTimeSleep == True:
 				time.sleep(self.timeinMs)
 				self.reset()
-		except:
-			print ("Exception in right function")
-			self.reset()
-
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.backwardRight -> " ,e )
+			self.reset()		
     
 	def reset(self):
 	
@@ -133,6 +155,6 @@ class RPI_:
 			IO.output(self.steer_pin_3,IO.LOW)
 			IO.output(self.steer_pin_4,IO.LOW)
 
-		except:
-			print ("Exception in reset function")
+		except Exception as e:
+			print ("ErrorOccured -> RPI_.reset -> ",e)
 			IO.cleanup()
