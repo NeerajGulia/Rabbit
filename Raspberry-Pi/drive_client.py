@@ -35,6 +35,10 @@ def driveCommand():
                 rcControl.forwardLeft()
             elif(command == '[w,d]' or command == '[d,w]'):
                 rcControl.forwardRight()
+			elif(command == '[a,s]' or command == '[s,a]'):
+                rcControl.backwardLeft()
+            elif(command == '[s,d]' or command == '[d,s]'):
+                rcControl.backwardRight()	
             else:
                 rcControl.reset()       
     except Exception as e:
