@@ -17,6 +17,9 @@ def streamCamera():
         with picamera.PiCamera() as camera:
             camera.resolution = constants.CAMERA_RESOLUTION      # pi camera resolution
             camera.framerate = constants.FRAMERATE               # 10 frames/sec
+            #camera.rotation = 90
+            camera.vflip = True #flip the image upside down since the camera is placed upside down
+            camera.hflip = True #flip the image from left to right, to correct the upside down. Else right will appear left and vice versa
             time.sleep(2)                       # give 2 secs for camera to initilize
             start = time.time()
             stream = io.BytesIO()

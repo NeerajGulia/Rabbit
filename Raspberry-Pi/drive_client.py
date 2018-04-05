@@ -16,7 +16,7 @@ def driveCommand():
         while True:
             # Read command received from server
             cmd = drive_socket.recv(constants.BUFFER_SIZE)
-            command = cmd.decode().lower().strip()   
+            command = cmd.decode().lower().strip()
             print("received: ", command)
             
             if (command == "x" or len(command) == 0): # drive forward
@@ -31,9 +31,9 @@ def driveCommand():
                 rcControl.forward()                
             elif(command == 's'):
                 rcControl.backward()
-            elif(command == 'a,w' or command == 'w,a'):
+            elif(command == '[a,w]' or command == '[w,a]'):
                 rcControl.forwardLeft()
-            elif(command == 'w,d' or command == 'd,w'):
+            elif(command == '[w,d]' or command == '[d,w]'):
                 rcControl.forwardRight()
             else:
                 rcControl.reset()       

@@ -14,11 +14,13 @@ from PIL import Image
 # Set server IP address & Port
 VIDEO_HOST = "0.0.0.0" #empty means it will listen on all ip address locally
 VIDEO_PORT = 8000
-IMAGE_SIZE = 320 * 240 * 3
+WIDTH = 320
+HEIGHT = 240
+IMAGE_SIZE = WIDTH * HEIGHT * 3
 
 DRIVE_HOST = "0.0.0.0"
 DRIVE_PORT = 8001
-STOP_RC = ' x  '
+STOP_RC = 'x'
 
 class Movement():
     UP         = "W"
@@ -56,33 +58,26 @@ class CollectTrainingData(object):
         self.commands = []
 
         pygame.init()
-        pygame.key.set_repeat(1,50) #1 is delay and 50 is interval in ms
-        self.screen = pygame.display.set_mode((320, 240))
+        pygame.key.set_repeat(1,50) #1 is delay and 50 is interval in ms. Without this the continuous key press wont be registered
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.collect_image()
 
     # Load a frameCount from the client Raspberry Pi to process
-    def get_image(self, video_socket):
+    def get_image(self, video_connection):
 
-        image_len = struct.unpack('<L', video_socket.read(struct.calcsize('<L')))[0]
+        image_len = struct.unpack('<L', video_connection.read(struct.calcsize('<L')))[0]
         if not image_len:
             print("Break as image length is null")
             return 0
         # Construct a stream to hold the image data and read the image
         # data from the connection
-        image_stream = io.BytesIO()
-        image_stream.write(video_socket.read(image_len))
-        # Rewind the stream, open it as an image with PIL
-        image_stream.seek(0)
-        image = Image.open(image_stream)
-        # Convert image to numpy array
-        img_array = np.array(image)
-
-        # Check to see if full image has been loaded - this prevents errors due to images lost over network
-        if img_array.size != IMAGE_SIZE:
-            print("ERROR (get_image) -> unexpected image size: expected: {}, got: {}".format(IMAGE_SIZE, img_array.size))
-            return 0
-
-        return img_array 
+        # image_stream = io.BytesIO()
+        # image_stream.write(video_connection.read(image_len))
+        # # Rewind the stream, open it as an image with PIL
+        # image_stream.seek(0)
+        file_bytes = np.asarray(bytearray(video_connection.read(image_len)), dtype=np.uint8)
+        img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        return img
     
     def appendCommand(self, command, fileName, image):
         print('command pressed: ', command)
@@ -104,20 +99,18 @@ class CollectTrainingData(object):
             frameCount = 1
             while self.send_inst:
                 frameSaved = False;
-                img_array = self.get_image(self.video_connection)
-                # print("len: {}, shape: {}".format(len(img_array), img_array.shape))
-                image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                image = self.get_image(self.video_connection)
+                # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
                 # select lower half of the image
                 # roi = image[120:240, :]
                 
                 # save streamed images
                 fileName = 'training_images/frameCount{:>05}.jpg'.format(frameCount)
                 self.screen.blit(pygame.surfarray.make_surface(image),(0,0))
-                pygame.display.flip()
-                # print(fileName)
-                # cv2.imshow('image', image)
+                pygame.display.update() #update the display with new image
+                cv2.imshow('image', image)
                 frameCount += 1
-            
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         print('Exiting now')
