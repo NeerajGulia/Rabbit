@@ -1,57 +1,19 @@
-import io
 import numpy as np
 import cv2
 import pygame
 from pygame.locals import *
 import socket
 import time
-import os
 import struct
 import sys
-from PIL import Image
-
-
-# Set server IP address & Port
-VIDEO_HOST = "0.0.0.0" #empty means it will listen on all ip address locally
-VIDEO_PORT = 8000
-WIDTH = 320
-HEIGHT = 240
-IMAGE_SIZE = WIDTH * HEIGHT * 3
-
-DRIVE_HOST = "0.0.0.0"
-DRIVE_PORT = 8001
-STOP_RC = 'x'
-
-class Movement():
-    UP         = "W"
-    DOWN       = "S"
-    LEFT       = "A"
-    RIGHT      = "D"
-    UP_RIGHT   = "[W,D]"
-    UP_LEFT    = "[A,W]"
-    DOWN_LEFT  = "[A,S]"
-    DOWN_RIGHT = "[S,D]"
-        
+sys.path.insert(0, '../lib')
+from utils import *
 
 class CollectTrainingData(object):
     
     def __init__(self):
-        # video socket and connection
-        self.video_socket = socket.socket()
-        self.video_socket.bind((VIDEO_HOST, VIDEO_PORT))
-        self.video_socket.listen(0)
-        # accept a single connection
-        self.video_connection = self.video_socket.accept()[0].makefile('rb')
-
-        # drive socket and connection
-        self.drive_socket = socket.socket()
-        self.drive_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.drive_socket.bind((DRIVE_HOST, DRIVE_PORT))
-        self.drive_socket.listen(0)
+        self.video_socket, self.video_connection, self.drive_socket, self.drive_client = getConnections()
         
-        self.drive_client, _ = self.drive_socket.accept()
-        
-        #connect to a seral port
         self.send_inst = True
         self.savedFrameCount = 0
         self.fileNames = []
@@ -61,23 +23,6 @@ class CollectTrainingData(object):
         pygame.key.set_repeat(1,50) #1 is delay and 50 is interval in ms. Without this the continuous key press wont be registered
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.collect_image()
-
-    # Load a frameCount from the client Raspberry Pi to process
-    def get_image(self, video_connection):
-
-        image_len = struct.unpack('<L', video_connection.read(struct.calcsize('<L')))[0]
-        if not image_len:
-            print("Break as image length is null")
-            return 0
-        # Construct a stream to hold the image data and read the image
-        # data from the connection
-        # image_stream = io.BytesIO()
-        # image_stream.write(video_connection.read(image_len))
-        # # Rewind the stream, open it as an image with PIL
-        # image_stream.seek(0)
-        file_bytes = np.asarray(bytearray(video_connection.read(image_len)), dtype=np.uint8)
-        img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-        return img
     
     def appendCommand(self, command, fileName, image):
         print('command pressed: ', command)
@@ -99,50 +44,15 @@ class CollectTrainingData(object):
             frameCount = 1
             while self.send_inst:
                 frameSaved = False;
-                image = self.get_image(self.video_connection)
-                # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-                # select lower half of the image
-                # roi = image[120:240, :]
-                
+                image = getImage(self.video_connection)
                 # save streamed images
                 fileName = 'training_images/frameCount{:>05}.jpg'.format(frameCount)
                 self.screen.blit(pygame.surfarray.make_surface(image),(0,0))
                 pygame.display.update() #update the display with new image
                 cv2.imshow('image', image)
                 frameCount += 1
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        print('Exiting now')
-                        self.send_inst = False
-                        break;
-                    
-                    elif event.type == KEYDOWN:
-                        key_input = pygame.key.get_pressed()
-                        if key_input[pygame.K_UP] and key_input[pygame.K_RIGHT]:
-                            self.appendCommand(Movement.UP_RIGHT, fileName, image)
-                            #give control to RC to move forward right
-            
-                        elif key_input[pygame.K_UP] and key_input[pygame.K_LEFT]:
-                            self.appendCommand(Movement.UP_LEFT, fileName, image)
-                            
-                        # simple orders
-                        elif key_input[pygame.K_UP]:
-                            self.appendCommand(Movement.UP, fileName, image)
-                            
-                        elif key_input[pygame.K_DOWN]:
-                            self.appendCommand(Movement.DOWN, fileName, image)
-                            
-                        elif key_input[pygame.K_RIGHT]:
-                           self.appendCommand(Movement.RIGHT, fileName, image)
-                            
-                        elif key_input[pygame.K_LEFT]:
-                            self.appendCommand(Movement.LEFT, fileName, image)
-                            
-                        elif key_input[pygame.K_x] or key_input[pygame.K_q]:
-                            print('exit')
-                            self.send_inst = False
-                            break
+                self.send_inst = processInput(self.appendCommand, fileName, image)
+
             # signal to drive_client to stop receiving the messages
             self.drive_client.sendall(str.encode(STOP_RC))        
             try:    
