@@ -104,7 +104,7 @@ class RPI_:
             print ("ErrorOccured -> RPI_.forwardRight ->" ,e )
             self.reset()
 
-       def backwardLeft(self):
+    def backwardLeft(self):
         try:
             IO.output(self.motor_pin_4,IO.LOW)
             IO.output(self.motor_pin_2,IO.LOW)
