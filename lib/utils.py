@@ -14,6 +14,7 @@ IMAGE_SIZE = WIDTH * HEIGHT * 3
 DRIVE_HOST = "0.0.0.0"
 DRIVE_PORT = 8001
 STOP_RC = 'x'
+QUIT_RC = '~'
 
 class Movement():
     UP         = "W"
@@ -37,6 +38,7 @@ def getImage(video_connection):
 def getConnections():
     # video socket and connection
     video_socket = socket.socket()
+    video_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     video_socket.bind((VIDEO_HOST, VIDEO_PORT))
     video_socket.listen(0)
     # accept a single connection
@@ -81,8 +83,44 @@ def processInput(executeCommand, *argv):
                 executeCommand(Movement.RIGHT, *argv)
             elif key_input[pygame.K_LEFT] or key_input[pygame.K_a]:
                 executeCommand(Movement.LEFT, *argv)
-            elif key_input[pygame.K_x] or key_input[pygame.K_q]:
+            elif key_input[pygame.K_x]:
                 print('exit')
                 send_inst = False
                 break
     return send_inst
+
+def mapCursor2Movement(executeCommand, key, *argv):
+    send_inst = True
+    isAutonomous = True
+    if (key == ord('e')):
+        executeCommand(Movement.UP_RIGHT, *argv)
+        isAutonomous = False
+    elif (key == ord('q')):
+        executeCommand(Movement.UP_LEFT, *argv)
+        isAutonomous = False
+    elif (key == ord('c')):
+        executeCommand(Movement.DOWN_RIGHT, *argv)
+        isAutonomous = False
+    elif (key == ord('z')):
+        isAutonomous = False
+        executeCommand(Movement.DOWN_LEFT, *argv)
+    
+    elif (key == ord('w')):
+        executeCommand(Movement.UP, *argv)
+        isAutonomous = False
+    elif (key == ord('s')):
+        executeCommand(Movement.DOWN, *argv)
+        isAutonomous = False
+    elif (key == ord('d')):
+        executeCommand(Movement.RIGHT, *argv)
+        isAutonomous = False
+    elif (key == ord('a')):
+        executeCommand(Movement.LEFT, *argv)
+        isAutonomous = False
+    elif (key == ord('x')):
+        print('exit')
+        send_inst = False
+    else:
+        executeCommand(None, *argv)
+        
+    return send_inst, isAutonomous

@@ -20,8 +20,8 @@ class CollectTrainingData(object):
         self.commands = []
 
         pygame.init()
-        pygame.key.set_repeat(1,50) #1 is delay and 50 is interval in ms. Without this the continuous key press wont be registered
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.key.set_repeat(1,50) #1 is delay and 50 is interval in ms. Without this the continuous key press wont be registered
         self.collect_image()
     
     def appendCommand(self, command, fileName, image):
@@ -71,7 +71,7 @@ class CollectTrainingData(object):
         except Exception as e:
                 print('ERROR -> training.collect_image: ', e)
         finally:
-            self.drive_client.send(str.encode(STOP_RC))        
+            self.drive_client.send(str.encode(QUIT_RC))        
             self.video_connection.close()
             self.video_socket.close()
             self.drive_client.close()

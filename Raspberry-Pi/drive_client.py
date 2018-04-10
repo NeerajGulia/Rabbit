@@ -39,6 +39,9 @@ def driveCommand():
                 rcControl.backwardLeft()
             elif(command == '[s,d]' or command == '[d,s]'):
                 rcControl.backwardRight()   
+            elif(command == '~'):
+                print('Quitting RC drive')
+                break;
             else:
                 rcControl.reset()       
     except Exception as e:
